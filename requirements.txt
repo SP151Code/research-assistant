@@ -1,0 +1,9 @@
+langchain
+langchain_community
+openai
+beautifulsoup4
+duckduckgo-search
+langchain-core
+langchain-openai
+langsmith
+requests

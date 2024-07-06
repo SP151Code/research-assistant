@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 import json
+import streamlit as st
 
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
@@ -55,7 +56,7 @@ scrape_and_summarize_chain = RunnablePassthrough.assign(
     summary = RunnablePassthrough.assign(
     text = lambda x: scrape_text(x["url"])[:10000]
     ) | summary_prompt | ChatOpenAI(model = "gpt-4o") | StrOutputParser()
-) | (lambda x: f"URL : {x["url"]}\n\nSummary:\n\n{x['summary']}")
+) | (lambda x: f"URL : {x['url']}\n\nSummary:\n\n{x['summary']}")
 
 web_search_chain = RunnablePassthrough.assign(
     urls = lambda x: web_search(x["question"]),
@@ -113,25 +114,3 @@ def collapse_list_of_lists(list_of_lists):
 chain = RunnablePassthrough.assign(
     research_summary =  full_research_chain | collapse_list_of_lists
 ) | prompt | ChatOpenAI(model = "gpt-4o") | StrOutputParser()
-
-from fastapi import FastAPI
-from langserve import add_routes
-
-
-app = FastAPI(
-  title="LangChain Server",
-  version="1.0",
-  description="A simple api server using Langchain's Runnable interfaces",
-)
-
-add_routes(
-    app,
-    chain,
-    path="/research-assistant",
-)
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="localhost", port=8000)
